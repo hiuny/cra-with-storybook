@@ -39,8 +39,8 @@ jobs:
         # https://github.com/nektos/act/issues/104#issuecomment-592892249
         if: steps.cache_dependencies.outputs.cache-hit == ''
         run: npm ci
-      outputs:
-        dependency_cache_key: ${{ runner.os }}-node-${{ steps.compute_lockfile_hash.outputs.hash }}
+    outputs:
+      dependency_cache_key: ${{ runner.os }}-node-${{ steps.compute_lockfile_hash.outputs.hash }}
 
   job_build_storybook:
     name: Bulld storybook
