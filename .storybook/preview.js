@@ -1,9 +1,12 @@
 import { initialize, mswDecorator } from 'msw-storybook-addon';
 
 // Initialize MSW
+console.log('msw init 하기 전');
+console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`)
+const mswWorkerPath = process.env.NODE_ENV === 'development' ? '' : 'https://hiuny.github.io/cra-with-storybook/'
 initialize({
   serviceWorker: {
-    url: 'https://hiuny.github.io/cra-with-storybook/mockServiceWorker.js'
+    url: `${mswWorkerPath}mockServiceWorker.js`,
   }
 });
 
