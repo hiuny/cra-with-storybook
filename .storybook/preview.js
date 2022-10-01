@@ -3,7 +3,7 @@ import { initialize, mswDecorator } from 'msw-storybook-addon';
 // Initialize MSW
 initialize({
   serviceWorker: {
-    url: 'mockServiceWorker.js'
+    url: 'https://hiuny.github.io/cra-with-storybook/mockServiceWorker.js'
   }
 });
 
