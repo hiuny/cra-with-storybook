@@ -25,7 +25,7 @@ jobs:
 
       - name: Compute dependency cache key
         id: compute_lockfile_hash
-        run: echo "::set-output name=hash::${{ hashFiles('package-lock.json') }}"
+        run: echo "::set-output name=hash::${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}"
 
       - name: Check dependency cache
         uses: actions/cache@v2
@@ -37,7 +37,6 @@ jobs:
       - name: Install dependencies
         # use '.', not '[]' with hyphenated variables
         # https://github.com/nektos/act/issues/104#issuecomment-592892249
-        # ${{ runner.os }}-node-
         if: steps.cache_dependencies.outputs.cache-hit == ''
         run: npm ci
     outputs:
@@ -69,7 +68,7 @@ jobs:
           path: ${{ env.CACHED_BUILD_PATHS }}
           key: ${{ env.BUILD_CACHE_KEY }}
 
-      - name: Build packages
+      - name: Build storybook
         if: steps.cache_built_packages.outputs.cache-hit == ''
         run: npm run build-storybook
 
