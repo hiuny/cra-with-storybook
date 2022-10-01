@@ -5,10 +5,17 @@ on:
     branches:
       - main
 
+env:
+  CACHED_DEPENDENCY_PATHS: ${{ github.workspace }}/node_modules
+  CACHED_BUILD_PATHS: ${{ github.workspace }}/storybook-static
+  BUILD_CACHE_KEY: ${{ github.sha }}
+
 jobs:
-  deploy:
+  job_install_dependencies:
+    name: Install Dependencies
     runs-on: ubuntu-latest
     steps:
+      - name: Check out current commit (${{ github.sha }})
       - uses: actions/checkout@v2
 
       - name: Setup Node
@@ -16,18 +23,56 @@ jobs:
         with:
           node-version: '14.x'
 
-      - name: Cache dependencies
+      - name: Compute dependency cache key
+        id: compute_lockfile_hash
+        run: echo "::set-output name=hash::${{ hashFiles('package-lock.json') }}"
+
+      - name: Check dependency cache
+        uses: actions/cache@v2
+        id: cache_dependencies
+        with:
+          path: ${{ env.CACHED_DEPENDENCY_PATHS }}
+          key: ${{ steps.compute_lockfile_hash.outputs.hash }}
+
+      - name: Install dependencies
+        # use '.', not '[]' with hyphenated variables
+        # https://github.com/nektos/act/issues/104#issuecomment-592892249
+        if: steps.cache_dependencies.outputs.cache-hit == ''
+        run: npm ci
+      outputs:
+        dependency_cache_key: ${{ runner.os }}-node-${{ steps.compute_lockfile_hash.outputs.hash }}
+
+  job_build_storybook:
+    name: Bulld storybook
+    needs: job_install_dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current commit (${{ github.sha }})
+      - uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Check dependency cache
         uses: actions/cache@v2
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          path: ${{ env.CACHED_DEPENDENCY_PATHS }}
+          key: ${{ needs.job_install_dependencies.outputs.dependency_cache_key }}
 
-      - run: npm ci
-      - run: npm run build-storybook
+      - name: Check build cache
+        uses: actions/cache@v2
+        id: cache_built_packages
+        with:
+          path: ${{ env.CACHED_BUILD_PATHS }}
+          key: ${{ env.BUILD_CACHE_KEY }}
 
-      - name: Deploy
+      - name: Build packages
+        if: steps.cache_built_packages.outputs.cache-hit == ''
+        run: npm run build-storybook
+
+      - name: Deploy storybook to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
