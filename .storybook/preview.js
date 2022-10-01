@@ -1,7 +1,11 @@
 import { initialize, mswDecorator } from 'msw-storybook-addon';
 
 // Initialize MSW
-initialize();
+initialize({
+  serviceWorker: {
+    url: 'mockServiceWorker.js'
+  }
+});
 
 // Provide the MSW addon decorator globally
 export const decorators = [mswDecorator];
